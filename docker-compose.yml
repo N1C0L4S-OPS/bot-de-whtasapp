@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  bot:
+    build: .
+    container_name: mydents-bot
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=mydents
+      - DB_USER=mydents
+      - DB_PASSWORD=mydents_secure_2026
+      - WHATSAPP_TOKEN=${WHATSAPP_TOKEN}
+      - WHATSAPP_PHONE_NUMBER_ID=${WHATSAPP_PHONE_NUMBER_ID}
+      - WHATSAPP_VERIFY_TOKEN=${WHATSAPP_VERIFY_TOKEN}
+      - WHATSAPP_API_VERSION=v21.0
+      - PORT=3001
+      - HOST=0.0.0.0
+      - RESPONSE_MODE=known_patients
+      - KEYWORD_TRIGGER=PACIENTE
+      - REMINDER_24H_HOUR=8
+      - REMINDER_24H_MINUTE=0
+      - REMINDER_3H_ENABLED=true
+      - CLINIC_NAME=Centro Odontológico MY DENT'S
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - mydents-net
+
+  db:
+    image: postgres:16-alpine
+    container_name: mydents-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: mydents
+      POSTGRES_USER: mydents
+      POSTGRES_PASSWORD: mydents_secure_2026
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mydents -d mydents"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - mydents-net
+
+volumes:
+  postgres_data:
+
+networks:
+  mydents-net:
+    driver: bridge
