@@ -42,8 +42,9 @@ app.get('/health', (req, res) => {
 
 app.use('/webhooks', require('./modules/webhooks/routes'));
 
-// El resto de los módulos admin (conversations, stats, config) se montan acá cuando se
-// construyan (Fase 2 — panel gráfico).
+app.use('/api/conversations', require('./modules/conversations/routes'));
+app.use('/api/stats', require('./modules/stats/routes'));
+app.use('/api', require('./modules/config/routes'));
 
 app.use((req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada.' });
