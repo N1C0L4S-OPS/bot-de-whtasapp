@@ -1,22 +1,35 @@
 version: '3.8'
 
+# El bot vive en el mismo servidor que el sistema principal, en la misma red de Docker
+# (mydents-net), para poder llegar a `db` por nombre de contenedor sin exponer Postgres a
+# internet. Esa red la crea el docker-compose del sistema principal — por eso acá se declara
+# como "external": este compose NO trae su propio Postgres, se conecta al real. Para levantar
+# el bot en desarrollo local hace falta que el docker-compose del sistema principal
+# (consultorio-dental-oficial-my-dents-) ya esté corriendo.
+
 services:
-  bot:
-    build: .
-    container_name: mydents-bot
+  bot-backend:
+    build: ./backend
+    container_name: mydents-bot-backend
     restart: unless-stopped
     ports:
       - "3001:3001"
     environment:
+      - DB_CLIENT=postgres
       - DB_HOST=db
       - DB_PORT=5432
       - DB_NAME=mydents
       - DB_USER=mydents
-      - DB_PASSWORD=mydents_secure_2026
+      - DB_PASSWORD=${DB_PASSWORD:?Definí DB_PASSWORD en el .env (mismo valor que el sistema principal)}
+      - JWT_SECRET=${JWT_SECRET:?Definí JWT_SECRET en el .env (mismo valor que el sistema principal)}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CORS_ORIGIN=${CORS_ORIGIN:-}
       - WHATSAPP_TOKEN=${WHATSAPP_TOKEN}
       - WHATSAPP_PHONE_NUMBER_ID=${WHATSAPP_PHONE_NUMBER_ID}
       - WHATSAPP_VERIFY_TOKEN=${WHATSAPP_VERIFY_TOKEN}
-      - WHATSAPP_API_VERSION=v21.0
+      - WHATSAPP_APP_SECRET=${WHATSAPP_APP_SECRET}
+      - META_GRAPH_API_VERSION=v21.0
       - PORT=3001
       - HOST=0.0.0.0
       - RESPONSE_MODE=known_patients
@@ -26,34 +39,28 @@ services:
       - REMINDER_3H_ENABLED=true
       - CLINIC_NAME=Centro Odontológico MY DENT'S
     depends_on:
-      db:
+      redis:
         condition: service_healthy
     networks:
       - mydents-net
 
-  db:
-    image: postgres:16-alpine
-    container_name: mydents-db
+  redis:
+    image: redis:7-alpine
+    container_name: mydents-bot-redis
     restart: unless-stopped
-    environment:
-      POSTGRES_DB: mydents
-      POSTGRES_USER: mydents
-      POSTGRES_PASSWORD: mydents_secure_2026
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U mydents -d mydents"]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - mydents-net
+    volumes:
+      - bot_redis_data:/data
 
 volumes:
-  postgres_data:
+  bot_redis_data:
 
 networks:
   mydents-net:
-    driver: bridge
+    external: true
