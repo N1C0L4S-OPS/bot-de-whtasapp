@@ -18,7 +18,9 @@ const env = {
   port: parseInt(process.env.PORT, 10) || 3001,
   host: process.env.HOST || '0.0.0.0',
 
-  jwtSecret: required('JWT_SECRET'),
+  // URL interna del sistema principal, para validar las sesiones del personal (ver
+  // middleware/auth.js). En Docker, ambos comparten la red mydents-net.
+  mainApiUrl: (process.env.MAIN_API_URL || 'http://backend:3000').replace(/\/+$/, ''),
 
   redis: {
     host: process.env.REDIS_HOST || 'localhost',

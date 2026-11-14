@@ -21,7 +21,8 @@ services:
       - DB_NAME=mydents
       - DB_USER=mydents
       - DB_PASSWORD=${DB_PASSWORD:?Definí DB_PASSWORD en el .env (mismo valor que el sistema principal)}
-      - JWT_SECRET=${JWT_SECRET:?Definí JWT_SECRET en el .env (mismo valor que el sistema principal)}
+      # Ya no comparte JWT_SECRET: valida las sesiones preguntándole al sistema principal.
+      - MAIN_API_URL=${MAIN_API_URL:-http://backend:3000}
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - CORS_ORIGIN=${CORS_ORIGIN:-}

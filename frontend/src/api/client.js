@@ -1,7 +1,7 @@
 // Dos bases distintas a propósito: el login/perfil viven en el sistema principal (el bot no
 // tiene su propio login), todo lo demás es la API propia de este bot. El token que devuelve
-// /main-api/auth/login es el mismo JWT que valida el backend del bot (mismo JWT_SECRET),
-// así que un solo login sirve para pegarle a las dos.
+// /main-api/auth/login es el que usa el backend del bot: lo valida preguntándole al sistema
+// principal (sin compartir secretos), así que un solo login sirve para las dos.
 const MAIN_API_BASE = import.meta.env.VITE_MAIN_API_URL || '/main-api';
 const BOT_API_BASE = import.meta.env.VITE_API_URL || '/api';
 
